@@ -24,7 +24,7 @@ jobs:
           node-version: "lts/*"
 
       - name: "Install the dependencies"
-        run: "yarn install --immutable"
+        run: "yarn install"
 
       - name: "Lint the code"
         run: "yarn lint"
