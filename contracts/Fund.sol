@@ -7,7 +7,6 @@ import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 /// @notice A contract to manage fund with >3 and <=10 assets with USDC as base asset
 /// @notice On every deposit (via backend keeper) or manual trigger has capability to rebalance
 contract Fund {
-
     /// @notice Quote tokens which comprises the portfolio
     address[] public quoteTokens;
 
@@ -23,7 +22,8 @@ contract Fund {
         uint usdcValue;
     }
 
-    /// @notice While deploying the contract we pass in quote tokens, base token and the uniswap router and store in global state
+    /// @notice While deploying the contract we pass in quote tokens, base token
+    /// @notice and the uniswap router and store in global state
     constructor(address[] memory _quoteTokens, address _baseToken, address _uniswapRouter) {
         quoteTokens = _quoteTokens;
         baseToken = _baseToken;
@@ -39,7 +39,7 @@ contract Fund {
         /// @dev Constructing an array of Asset struct in order to keep track of USDC worth of assets
         /// @dev which will later be used to rebalance portfolio
         Asset[] memory assets;
-        for(uint i = 0; i < numTokens; i++) {
+        for (uint i = 0; i < numTokens; i++) {
             Asset memory a;
             a.addr = quoteTokens[i];
             a.usdcValue = getTokenPrice(quoteTokens[i], baseToken, IERC20(quoteTokens[i]).balanceOf(address(this)));
@@ -53,10 +53,8 @@ contract Fund {
         Asset[] memory sortedAssets = _sortAssetsByValue(assets);
         uint expectedTokensUsdcVal = (totTokenUsdcValue + IERC20(baseToken).balanceOf(address(this)) / numTokens);
 
-        for(uint i = 0; i < numTokens; i++) {
-            if (sortedAssets[i].usdcValue == expectedTokensUsdcVal) {
-                // do nothing
-            } else if (sortedAssets[i].usdcValue > expectedTokensUsdcVal) {
+        for (uint i = 0; i < numTokens; i++) {
+            if (sortedAssets[i].usdcValue > expectedTokensUsdcVal) {
                 /// @notice Swap extra tokens to usdc if asset worth is more than average
                 uint256 amountOut = sortedAssets[i].usdcValue - expectedTokensUsdcVal;
                 uint256 tokenBal = IERC20(quoteTokens[i]).balanceOf(address(this));
@@ -72,7 +70,7 @@ contract Fund {
                     address(this),
                     block.timestamp + 15
                 );
-            } else {
+            } else if (sortedAssets[i].usdcValue < expectedTokensUsdcVal) {
                 /// @notice Swap required usdc to asset if asset worth is less than average
                 uint amountIn = expectedTokensUsdcVal - sortedAssets[i].usdcValue;
                 IERC20(baseToken).approve(address(uniswapRouter), amountIn);
@@ -92,7 +90,7 @@ contract Fund {
     }
 
     /// @notice Takes in array of Asset struct and Returns sorted array of Asset struct by usdcValue
-    function getTokenPrice(address tokenIn, address tokenOut, uint amountIn) public view returns(uint) {
+    function getTokenPrice(address tokenIn, address tokenOut, uint amountIn) public view returns (uint) {
         address[] memory path = new address[](2);
         path[0] = tokenIn;
         path[1] = tokenOut;
