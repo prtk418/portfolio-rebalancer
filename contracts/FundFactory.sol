@@ -14,7 +14,7 @@ contract FundFactory {
     /// @notice Takes quote tokens, base token and the uniswap router as parameters
     /// @notice and deploys a new instance of Fund contract
     function createFund(address[] memory _quoteTokens, address _baseToken, address _uniswapRouter) public {
-        require(_quoteTokens.length > 3, "FundFactory: Minimum quote tokens required - 3");
+        require(_quoteTokens.length >= 3, "FundFactory: Minimum quote tokens required - 3");
         require(_quoteTokens.length <= 10, "FundFactory: Maximum quote tokens possible - 10");
         Fund fund = new Fund(_quoteTokens, _baseToken, _uniswapRouter);
         funds.push(fund);
