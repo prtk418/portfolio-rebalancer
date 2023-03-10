@@ -82,6 +82,12 @@ const config: HardhatUserConfig = {
         mnemonic,
       },
       chainId: chainIds.hardhat,
+      forking: {
+            // eslint-disable-next-line
+            enabled: true,
+            url: `https://goerli.infura.io/v3/782996d1f80a436e96b567945474b016`,
+            blockNumber: 8629026
+      }
     },
     arbitrum: getChainConfig("arbitrum-mainnet"),
     avalanche: getChainConfig("avalanche"),
@@ -91,6 +97,7 @@ const config: HardhatUserConfig = {
     "polygon-mainnet": getChainConfig("polygon-mainnet"),
     "polygon-mumbai": getChainConfig("polygon-mumbai"),
     sepolia: getChainConfig("sepolia"),
+    goerli: getChainConfig("goerli"),
   },
   paths: {
     artifacts: "./artifacts",

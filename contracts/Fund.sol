@@ -3,6 +3,7 @@ pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol";
 
 /// @notice A contract to manage fund with >3 and <=10 assets with USDC as base asset
 /// @notice On every deposit (via backend keeper) or manual trigger has capability to rebalance
@@ -38,53 +39,63 @@ contract Fund {
 
         /// @dev Constructing an array of Asset struct in order to keep track of USDC worth of assets
         /// @dev which will later be used to rebalance portfolio
-        Asset[] memory assets;
+        Asset[] memory assets = new Asset[](numTokens);
         for (uint i = 0; i < numTokens; i++) {
             Asset memory a;
             a.addr = quoteTokens[i];
-            a.usdcValue = getTokenPrice(quoteTokens[i], baseToken, IERC20(quoteTokens[i]).balanceOf(address(this)));
+            uint tokenBal = IERC20(quoteTokens[i]).balanceOf(address(this));
+            if (tokenBal > 0) {
+                a.usdcValue = getTokenPrice(quoteTokens[i], baseToken, tokenBal);
+            }
             assets[i] = a;
 
             totTokenUsdcValue += a.usdcValue;
         }
-
+        uint usdcBal = IERC20(baseToken).balanceOf(address(this));
         /// @dev Need to sort because we want to sell high worth assets first to accrue additional USDC
         /// @dev which can later be used to swap to low worth assets
         Asset[] memory sortedAssets = _sortAssetsByValue(assets);
-        uint expectedTokensUsdcVal = (totTokenUsdcValue + IERC20(baseToken).balanceOf(address(this)) / numTokens);
-
+        uint expectedTokensUsdcVal = (totTokenUsdcValue + usdcBal) / numTokens;
+        require(expectedTokensUsdcVal > 0, "No funds to rebalance");
         for (uint i = 0; i < numTokens; i++) {
             if (sortedAssets[i].usdcValue > expectedTokensUsdcVal) {
                 /// @notice Swap extra tokens to usdc if asset worth is more than average
                 uint256 amountOut = sortedAssets[i].usdcValue - expectedTokensUsdcVal;
-                uint256 tokenBal = IERC20(quoteTokens[i]).balanceOf(address(this));
-                IERC20(quoteTokens[i]).approve(address(uniswapRouter), tokenBal);
-                address[] memory path = new address[](2);
-                path[0] = quoteTokens[i];
-                path[1] = baseToken;
-                uint256 amountInMax = ((tokenBal * amountOut * 105) / (sortedAssets[i].usdcValue * 100)); // 5% slippage
-                uniswapRouter.swapTokensForExactTokens(
-                    amountOut,
-                    amountInMax,
-                    path,
-                    address(this),
-                    block.timestamp + 15
-                );
+                /// @notice keeping a 1% threshold to rebalance 
+                /// @notice i.e, rebalance only if there is usdc value change of more than 1%
+                if ((amountOut*100)/expectedTokensUsdcVal > 1) {
+                    uint256 tokenBal = IERC20(sortedAssets[i].addr).balanceOf(address(this));
+                    IERC20(sortedAssets[i].addr).approve(address(uniswapRouter), tokenBal);
+                    address[] memory path = new address[](2);
+                    path[0] = sortedAssets[i].addr;
+                    path[1] = baseToken;
+                    uniswapRouter.swapTokensForExactTokens(
+                        amountOut,
+                        uniswapRouter.getAmountsIn(amountOut, path)[0],
+                        path,
+                        address(this),
+                        block.timestamp + 15
+                    );
+                    tokenBal = IERC20(sortedAssets[i].addr).balanceOf(address(this));
+                }
             } else if (sortedAssets[i].usdcValue < expectedTokensUsdcVal) {
                 /// @notice Swap required usdc to asset if asset worth is less than average
                 uint amountIn = expectedTokensUsdcVal - sortedAssets[i].usdcValue;
-                IERC20(baseToken).approve(address(uniswapRouter), amountIn);
-                address[] memory path = new address[](2);
-                path[0] = baseToken;
-                path[1] = quoteTokens[i];
-                uint amountOutMin = (95 * amountIn) / 100; // 5% slippage
-                uniswapRouter.swapExactTokensForTokens(
-                    amountIn,
-                    amountOutMin,
-                    path,
-                    address(this),
-                    block.timestamp + 15
-                );
+                /// @notice keeping a 1% threshold to rebalance 
+                /// @notice i.e, rebalance only if there is usdc value change of more than 1%
+                if ((amountIn*100)/expectedTokensUsdcVal > 1) {
+                    IERC20(baseToken).approve(address(uniswapRouter), amountIn);
+                    address[] memory path = new address[](2);
+                    path[0] = baseToken;
+                    path[1] = sortedAssets[i].addr;
+                    uniswapRouter.swapExactTokensForTokens(
+                        amountIn,
+                        uniswapRouter.getAmountsOut(amountIn, path)[1],
+                        path,
+                        address(this),
+                        block.timestamp + 15
+                    );
+                }
             }
         }
     }
@@ -103,7 +114,7 @@ contract Fund {
     function _sortAssetsByValue(Asset[] memory assets) private pure returns (Asset[] memory) {
         for (uint i = 1; i < assets.length; i++)
             for (uint j = 0; j < i; j++)
-                if (assets[i].usdcValue < assets[j].usdcValue) {
+                if (assets[i].usdcValue > assets[j].usdcValue) {
                     Asset memory x = assets[i];
                     assets[i] = assets[j];
                     assets[j] = x;

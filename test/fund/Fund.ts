@@ -3,8 +3,8 @@ import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signe
 import { ethers } from "hardhat";
 
 import type { Signers } from "../types";
-import { shouldBehaveLikeGreeter } from "./Greeter.behavior";
-import { deployGreeterFixture } from "./Greeter.fixture";
+import { shouldBehaveLikeFund } from "./Fund.behavior";
+import { deployFundFixture } from "./Fund.fixture";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -16,12 +16,15 @@ describe("Unit tests", function () {
     this.loadFixture = loadFixture;
   });
 
-  describe("Greeter", function () {
+  describe("Fund", function () {
     beforeEach(async function () {
-      const { greeter } = await this.loadFixture(deployGreeterFixture);
-      this.greeter = greeter;
+      const { fund, quoteToken1, quoteToken2, quoteToken3 } = await this.loadFixture(deployFundFixture);
+      this.fund = fund;
+      this.quoteToken1 = quoteToken1;
+      this.quoteToken2 = quoteToken2;
+      this.quoteToken3 = quoteToken3;
     });
 
-    shouldBehaveLikeGreeter();
+    shouldBehaveLikeFund();
   });
 });
