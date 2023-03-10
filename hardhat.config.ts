@@ -85,7 +85,7 @@ const config: HardhatUserConfig = {
       forking: {
         // eslint-disable-next-line
         enabled: true,
-        url: `https://goerli.infura.io/v3/782996d1f80a436e96b567945474b016`,
+        url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
         blockNumber: 8629026,
       },
     },
