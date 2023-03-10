@@ -61,9 +61,9 @@ contract Fund {
             if (sortedAssets[i].usdcValue > expectedTokensUsdcVal) {
                 /// @notice Swap extra tokens to usdc if asset worth is more than average
                 uint256 amountOut = sortedAssets[i].usdcValue - expectedTokensUsdcVal;
-                /// @notice keeping a 1% threshold to rebalance 
+                /// @notice keeping a 1% threshold to rebalance
                 /// @notice i.e, rebalance only if there is usdc value change of more than 1%
-                if ((amountOut*100)/expectedTokensUsdcVal > 1) {
+                if ((amountOut * 100) / expectedTokensUsdcVal > 1) {
                     uint256 tokenBal = IERC20(sortedAssets[i].addr).balanceOf(address(this));
                     IERC20(sortedAssets[i].addr).approve(address(uniswapRouter), tokenBal);
                     address[] memory path = new address[](2);
@@ -81,9 +81,9 @@ contract Fund {
             } else if (sortedAssets[i].usdcValue < expectedTokensUsdcVal) {
                 /// @notice Swap required usdc to asset if asset worth is less than average
                 uint amountIn = expectedTokensUsdcVal - sortedAssets[i].usdcValue;
-                /// @notice keeping a 1% threshold to rebalance 
+                /// @notice keeping a 1% threshold to rebalance
                 /// @notice i.e, rebalance only if there is usdc value change of more than 1%
-                if ((amountIn*100)/expectedTokensUsdcVal > 1) {
+                if ((amountIn * 100) / expectedTokensUsdcVal > 1) {
                     IERC20(baseToken).approve(address(uniswapRouter), amountIn);
                     address[] memory path = new address[](2);
                     path[0] = baseToken;

@@ -83,11 +83,11 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
-            // eslint-disable-next-line
-            enabled: true,
-            url: `https://goerli.infura.io/v3/782996d1f80a436e96b567945474b016`,
-            blockNumber: 8629026
-      }
+        // eslint-disable-next-line
+        enabled: true,
+        url: `https://goerli.infura.io/v3/782996d1f80a436e96b567945474b016`,
+        blockNumber: 8629026,
+      },
     },
     arbitrum: getChainConfig("arbitrum-mainnet"),
     avalanche: getChainConfig("avalanche"),
