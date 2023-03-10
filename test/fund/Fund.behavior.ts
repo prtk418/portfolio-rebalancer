@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 export function shouldBehaveLikeFund(): void {
-  it("should return the new greeting once it's changed", async function () {
+  it("should rebalance portfolio after adding usdc and price changes in portfolio tokens by triggering rebalance() function", async function () {
     const usdcHolder = "0xbC3291D1EE46662DB8921DD120baF6a3C60c3BCD";
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
