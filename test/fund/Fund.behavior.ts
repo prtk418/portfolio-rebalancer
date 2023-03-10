@@ -1,7 +1,7 @@
-import { expect } from "chai";
-import { ethers } from "hardhat";
 import ERC20ABI from "@uniswap/v2-periphery/build/ERC20.json";
 import uniswapRouterAbi from "@uniswap/v2-periphery/build/UniswapV2Router01.json";
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
 export function shouldBehaveLikeFund(): void {
   it("should return the new greeting once it's changed", async function () {
